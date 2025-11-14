@@ -101,7 +101,7 @@ export default function DailyAlarmsScreen({ hasPermission }: DailyAlarmsScreenPr
         ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'],
         undefined,
         undefined,
-        'customAlarm.wav'
+        'soniareCollective.wav'
       );
 
       if (success) {
