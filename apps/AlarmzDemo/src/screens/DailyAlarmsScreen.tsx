@@ -55,7 +55,7 @@ export default function DailyAlarmsScreen({ hasPermission }: DailyAlarmsScreenPr
     }
   }, [hasPermission]);
 
-  const scheduleDailyAlarm = async () => {
+  const scheduleDailyAlarm = async (bypassWarning = false) => {
     if (!hasPermission) {
       console.warn('⚠️ Permission required to schedule alarm');
       Alert.alert('Permission Required', 'Please grant alarm permission first');
@@ -83,6 +83,19 @@ export default function DailyAlarmsScreen({ hasPermission }: DailyAlarmsScreenPr
       return;
     }
 
+    // Check if minute is on a 15-minute boundary (0, 15, 30, 45)
+    if (!bypassWarning && alarmTime.minute % 15 !== 0) {
+      Alert.alert(
+        'Invalid Minute',
+        `⚠️ iOS may only trigger alarms on 15-minute intervals (00, 15, 30, 45).\n\nYou selected :${alarmTime.minute.toString().padStart(2, '0')} which may not trigger.\n\nChange to :00, :15, :30, or :45 to ensure the alarm works.`,
+        [
+          { text: 'Change Minute', style: 'cancel' },
+          { text: 'Schedule Anyway', style: 'destructive', onPress: () => scheduleDailyAlarm(true) },
+        ]
+      );
+      return;
+    }
+
     setIsScheduling(true);
     try {
       console.log('🔔 Scheduling alarm for', `${alarmTime.hour}:${alarmTime.minute.toString().padStart(2, '0')}`);
@@ -101,7 +114,7 @@ export default function DailyAlarmsScreen({ hasPermission }: DailyAlarmsScreenPr
         ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'],
         undefined,
         undefined,
-        'soniareCollective.wav'
+        undefined
       );
 
       if (success) {
@@ -256,7 +269,7 @@ export default function DailyAlarmsScreen({ hasPermission }: DailyAlarmsScreenPr
 
         {/* Schedule Button */}
         <TouchableOpacity
-          onPress={scheduleDailyAlarm}
+          onPress={() => scheduleDailyAlarm()}
           disabled={!hasPermission || isScheduling}
           style={{
             backgroundColor: !hasPermission || isScheduling ? '#333333' : '#FFA500',

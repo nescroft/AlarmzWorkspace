@@ -75,7 +75,7 @@ To ensure your custom alarm sounds work correctly with iOS AlarmKit, they must m
 - **Duration:** MUST be under 30 seconds (if longer, iOS will silently use the default system sound)
 - **Sample Rate:** 44.1 kHz or 48 kHz
 - **Bit Depth:** 16-bit recommended
-- **Channels:** Mono or Stereo
+- **Channels:** Mono or Stereo (both work - stereo confirmed working)
 
 **File Location:**
 - Sound files **MUST** be placed in your app's main bundle directory
@@ -104,6 +104,31 @@ afconvert -f caff -d LEI16@44100 -c 1 input.mp3 output.caf
 - **Always include the file extension** when passing the sound name (e.g., `"alarmSound.caf"`, not `"alarmSound"`)
 - If the sound file doesn't meet requirements or can't be found, the alarm will still schedule but may use the default system sound
 - Test your alarm sounds to ensure they trigger properly
+
+### ⚠️ Minute Interval Restriction (Relative/Daily Alarms)
+
+**IMPORTANT:** Based on testing, iOS appears to have an **undocumented restriction** for relative (recurring) alarms:
+
+- ✅ **Alarms MAY only trigger on 15-minute intervals**: :00, :15, :30, :45
+- ❌ **Other minutes (like :05, :10, :20) may silently fail to trigger**
+- ⚠️ The alarm will schedule successfully (no errors) but won't actually ring
+- ✅ **Fixed/countdown alarms do NOT have this restriction**
+
+**Example:**
+```typescript
+// These MAY work
+scheduleRelativeAlarm('Alarm', stopBtn, '#FFF', 7, 0, days);   // 7:00 ✅
+scheduleRelativeAlarm('Alarm', stopBtn, '#FFF', 7, 15, days);  // 7:15 ✅
+scheduleRelativeAlarm('Alarm', stopBtn, '#FFF', 7, 30, days);  // 7:30 ✅
+scheduleRelativeAlarm('Alarm', stopBtn, '#FFF', 7, 45, days);  // 7:45 ✅
+
+// These may schedule but NOT trigger
+scheduleRelativeAlarm('Alarm', stopBtn, '#FFF', 7, 5, days);   // 7:05 ❌
+scheduleRelativeAlarm('Alarm', stopBtn, '#FFF', 7, 10, days);  // 7:10 ❌
+scheduleRelativeAlarm('Alarm', stopBtn, '#FFF', 7, 25, days);  // 7:25 ❌
+```
+
+**Recommendation:** For reliable relative/daily alarms, only use minutes: 0, 15, 30, or 45. For other times, use `scheduleFixedAlarm` with countdown or timestamp instead.
 
 ## 🔊 Alarm Volume Behavior
 
