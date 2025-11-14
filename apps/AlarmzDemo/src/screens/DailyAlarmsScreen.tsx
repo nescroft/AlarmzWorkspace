@@ -77,7 +77,7 @@ export default function DailyAlarmsScreen({ hasPermission }: DailyAlarmsScreenPr
     if (minutesUntilAlarm < 15) {
       Alert.alert(
         'Too Soon',
-        `Alarms must be scheduled at least 15 minutes in advance.\n\nThis alarm is only ${Math.floor(minutesUntilAlarm)} minutes away and won't ring until tomorrow.`,
+        `Daily alarms must be scheduled at least 15 minutes in the future.\n\nThis alarm is only ${Math.floor(minutesUntilAlarm)} minutes away. One time alarms aka fixed alarms don't have this limitation. You can try a one time alarm on the test page.`,
         [{ text: 'OK' }]
       );
       return;
@@ -101,7 +101,7 @@ export default function DailyAlarmsScreen({ hasPermission }: DailyAlarmsScreenPr
         ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'],
         undefined,
         undefined,
-        'alarmSound.caf'
+        'customAlarm.wav'
       );
 
       if (success) {

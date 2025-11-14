@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0C80B921A6F3F58F76C31292 /* libPods-AlarmzDemo.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5DCACB8F33CDC322A6C60F78 /* libPods-AlarmzDemo.a */; };
-		10053B6C2EC7636E00C95BF7 /* alarmSound.caf in Resources */ = {isa = PBXBuildFile; fileRef = 10053B6B2EC7636E00C95BF7 /* alarmSound.caf */; };
+		10053B6E2EC768D000C95BF7 /* customAlarm.wav in Resources */ = {isa = PBXBuildFile; fileRef = 10053B6D2EC768D000C95BF7 /* customAlarm.wav */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		66C07340287FD46038249265 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
@@ -16,7 +16,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		10053B6B2EC7636E00C95BF7 /* alarmSound.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = alarmSound.caf; sourceTree = "<group>"; };
+		10053B6D2EC768D000C95BF7 /* customAlarm.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = customAlarm.wav; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* AlarmzDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AlarmzDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = AlarmzDemo/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = AlarmzDemo/Info.plist; sourceTree = "<group>"; };
@@ -49,7 +49,7 @@
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
 				13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */,
-				10053B6B2EC7636E00C95BF7 /* alarmSound.caf */,
+				10053B6D2EC768D000C95BF7 /* customAlarm.wav */,
 			);
 			name = AlarmzDemo;
 			sourceTree = "<group>";
@@ -161,10 +161,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				10053B6C2EC7636E00C95BF7 /* alarmSound.caf in Resources */,
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				66C07340287FD46038249265 /* PrivacyInfo.xcprivacy in Resources */,
+				10053B6E2EC768D000C95BF7 /* customAlarm.wav in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

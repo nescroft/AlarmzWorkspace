@@ -82,7 +82,7 @@ export default function OneTimeAlarmsScreen({ hasPermission }: OneTimeAlarmsScre
         snoozeButton,
         undefined,           // No timestamp needed with countdown
         countdown,           // Use countdown instead
-        'alarmSound.caf'    // Custom sound
+        'customAlarm.wav'    // Custom sound
       );
 
       if (success) {
