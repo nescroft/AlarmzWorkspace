@@ -1,0 +1,17 @@
+{
+  "cxxNamespace": ["rnalarmz"],
+  "ios": {
+    "iosModuleName": "RnAlarmz"
+  },
+  "android": {
+    "androidNamespace": ["rnalarmz"],
+    "androidCxxLibName": "rnalarmz"
+  },
+  "autolinking": {
+    "RnAlarmz": {
+      "swift": "RnAlarmz",
+      "kotlin": "RnAlarmz"
+    }
+  },
+  "ignorePaths": ["node_modules"]
+}
