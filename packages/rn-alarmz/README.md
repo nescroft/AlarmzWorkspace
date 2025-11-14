@@ -38,8 +38,89 @@ scheduleFixedAlarm("super alarme", stopBtn, "#FFFFFF", secondBtn, undefined, cou
 
 // Set up a relative alarm that will trigger at 10:00 on Monday, Thursday, and Friday
 scheduleRelativeAlarm("amazing relative alarm", stopBtn, "#FFFFFF", 10, 0, ["monday", "friday", "thursday"])
+
+// Set up an alarm with custom sound
+scheduleRelativeAlarm(
+  "alarm with sound",
+  stopBtn,
+  "#FFFFFF",
+  7,
+  30,
+  ["monday", "tuesday", "wednesday", "thursday", "friday"],
+  undefined,
+  undefined,
+  "alarmSound.caf"  // Sound file name WITH extension
+)
 ```
 
+## 🔊 Custom Alarm Sounds
+
+You can use custom sounds for your alarms by passing a sound file name to the `scheduleFixedAlarm` or `scheduleRelativeAlarm` functions.
+
+### Requirements
+
+To ensure your custom alarm sounds work correctly with iOS AlarmKit, they must meet these specifications:
+
+**File Format:**
+- Supported formats: `.aiff`, `.wav`, or `.caf`
+- **Recommended:** `.caf` (Core Audio Format) - Apple's native format
+
+**Audio Data Format:**
+- Linear PCM (recommended)
+- MA4 (IMA/ADPCM)
+- µLaw
+- aLaw
+
+**Audio Specifications:**
+- **Duration:** MUST be under 30 seconds (if longer, iOS will silently use the default system sound)
+- **Sample Rate:** 44.1 kHz or 48 kHz
+- **Bit Depth:** 16-bit recommended
+- **Channels:** Mono or Stereo
+
+**File Location:**
+- Sound files **MUST** be placed in your app's main bundle directory
+- For React Native: Place files in `ios/YourAppName/YourAppName/` (e.g., `ios/AlarmzDemo/AlarmzDemo/`)
+- Then add them to your Xcode project:
+  1. Open your `.xcodeproj` or `.xcworkspace` in Xcode
+  2. Drag the sound file into the file navigator
+  3. **IMPORTANT:** Check "Copy items if needed" and select your app target
+  4. Verify the file appears in Build Phases → Copy Bundle Resources
+- If the file is not in the app bundle, alarms will schedule but won't trigger
+
+### Converting Audio Files
+
+Use the `afconvert` command-line tool to convert audio files to the correct format:
+
+```bash
+# Convert to CAF with Linear PCM, 16-bit, 48kHz, Mono
+afconvert -f caff -d LEI16@48000 -c 1 input.wav output.caf
+
+# Convert to CAF with Linear PCM, 16-bit, 44.1kHz, Mono
+afconvert -f caff -d LEI16@44100 -c 1 input.mp3 output.caf
+```
+
+### Important Notes
+
+- **Always include the file extension** when passing the sound name (e.g., `"alarmSound.caf"`, not `"alarmSound"`)
+- If the sound file doesn't meet requirements or can't be found, the alarm will still schedule but may use the default system sound
+- Test your alarm sounds to ensure they trigger properly
+
+## 🔊 Alarm Volume Behavior
+
+Understanding how iOS handles alarm volume is critical for setting user expectations:
+
+**Default Behavior (System Design):**
+- ✅ AlarmKit alarms **DO break through Silent mode and Focus modes** (unlike notifications)
+- ❌ **BUT** volume is tied to your **Ringer Volume**, NOT media volume
+- ❌ There's **NO programmatic way** to force max volume - it's a system limitation
+
+**Important:** If your device's ringer volume is set low (Settings → Sounds & Haptics → Ringer and Alerts), your alarms will be quiet. This is the same behavior as Apple's native Clock app - there is no API to override or programmatically control alarm volume in iOS.
+
+**User Guidance:**
+- Alarms will play at the current ringer volume level
+- Silent mode and Focus modes will NOT silence alarms (they will still play)
+- Users should check their ringer volume if alarms are too quiet or too loud
+- This is a system-level limitation, not a library issue
 
 ## 🤝 Contributing
 

@@ -85,7 +85,24 @@ class RnAlarmz: HybridRnAlarmzSpec {
                     let countdownDuration = Alarm.CountdownDuration(preAlert: preAlert, postAlert: postAlert)
 
                     if let soundName = soundName {
+                        print("📢 [RnAlarmz] Attempting to load sound: \(soundName)")
+
+                        // Check if file exists in bundle
+                        let soundNameWithoutExt = soundName.replacingOccurrences(of: ".caf", with: "").replacingOccurrences(of: ".wav", with: "")
+                        if let soundPath = Bundle.main.path(forResource: soundNameWithoutExt, ofType: nil) {
+                            print("✅ [RnAlarmz] Sound file found in bundle: \(soundPath)")
+                        } else if let soundPathCaf = Bundle.main.path(forResource: soundNameWithoutExt, ofType: "caf") {
+                            print("✅ [RnAlarmz] Sound file found as CAF: \(soundPathCaf)")
+                        } else if let soundPathWav = Bundle.main.path(forResource: soundNameWithoutExt, ofType: "wav") {
+                            print("✅ [RnAlarmz] Sound file found as WAV: \(soundPathWav)")
+                        } else {
+                            print("❌ [RnAlarmz] Sound file NOT found in bundle!")
+                            print("❌ [RnAlarmz] Searched for: \(soundNameWithoutExt)")
+                        }
+
+                        // Use the exact soundName as provided (with extension)
                         let alertSound = AlertConfiguration.AlertSound.named(soundName)
+                        print("📢 [RnAlarmz] Alert sound created with name: \(soundName)")
                         configuration = AlarmManager.AlarmConfiguration(
                             countdownDuration: countdownDuration,
                             schedule: schedule,
@@ -101,7 +118,9 @@ class RnAlarmz: HybridRnAlarmzSpec {
                     }
                 } else {
                     if let soundName = soundName {
+                        print("📢 [RnAlarmz] Attempting to load sound: \(soundName)")
                         let alertSound = AlertConfiguration.AlertSound.named(soundName)
+                        print("📢 [RnAlarmz] Alert sound created successfully")
                         configuration = AlarmManager.AlarmConfiguration(
                             schedule: schedule,
                             attributes: attributes,
@@ -117,9 +136,26 @@ class RnAlarmz: HybridRnAlarmzSpec {
 
                 let uuid = UUID()
                 do {
+                    print("🔔 [RnAlarmz] ========== SCHEDULING FIXED ALARM ==========")
+                    print("🔔 [RnAlarmz] Timestamp: \(timestamp ?? 0)")
+                    print("🔔 [RnAlarmz] Has countdown: \(countdown != nil)")
+                    print("🔔 [RnAlarmz] Has secondaryBtn: \(secondaryBtn != nil)")
+                    print("🔔 [RnAlarmz] Title: \(title)")
+                    print("🔔 [RnAlarmz] TintColor: \(tintColor)")
+                    print("🔔 [RnAlarmz] Stop button text: \(stopBtn.text)")
+                    print("🔔 [RnAlarmz] Sound name: \(soundName ?? "nil (using default)")")
+                    print("🔔 [RnAlarmz] Configuration created, attempting to schedule...")
+
                     _ = try await manager.schedule(id: uuid, configuration: configuration)
+
+                    print("✅ [RnAlarmz] Alarm scheduled successfully with ID: \(uuid)")
                     return true
-                } catch {
+                } catch let error as NSError {
+                    print("❌ [RnAlarmz] ========== SCHEDULING FAILED ==========")
+                    print("❌ [RnAlarmz] Error domain: \(error.domain)")
+                    print("❌ [RnAlarmz] Error code: \(error.code)")
+                    print("❌ [RnAlarmz] Error description: \(error.localizedDescription)")
+                    print("❌ [RnAlarmz] Error userInfo: \(error.userInfo)")
                     throw error
                 }
             } else {
@@ -217,7 +253,24 @@ class RnAlarmz: HybridRnAlarmzSpec {
                     let countdownDuration = Alarm.CountdownDuration(preAlert: preAlert, postAlert: postAlert)
 
                     if let soundName = soundName {
+                        print("📢 [RnAlarmz] Attempting to load sound: \(soundName)")
+
+                        // Check if file exists in bundle
+                        let soundNameWithoutExt = soundName.replacingOccurrences(of: ".caf", with: "").replacingOccurrences(of: ".wav", with: "")
+                        if let soundPath = Bundle.main.path(forResource: soundNameWithoutExt, ofType: nil) {
+                            print("✅ [RnAlarmz] Sound file found in bundle: \(soundPath)")
+                        } else if let soundPathCaf = Bundle.main.path(forResource: soundNameWithoutExt, ofType: "caf") {
+                            print("✅ [RnAlarmz] Sound file found as CAF: \(soundPathCaf)")
+                        } else if let soundPathWav = Bundle.main.path(forResource: soundNameWithoutExt, ofType: "wav") {
+                            print("✅ [RnAlarmz] Sound file found as WAV: \(soundPathWav)")
+                        } else {
+                            print("❌ [RnAlarmz] Sound file NOT found in bundle!")
+                            print("❌ [RnAlarmz] Searched for: \(soundNameWithoutExt)")
+                        }
+
+                        // Use the exact soundName as provided (with extension)
                         let alertSound = AlertConfiguration.AlertSound.named(soundName)
+                        print("📢 [RnAlarmz] Alert sound created with name: \(soundName)")
                         configuration = AlarmManager.AlarmConfiguration(
                             countdownDuration: countdownDuration,
                             schedule: schedule,
@@ -233,7 +286,9 @@ class RnAlarmz: HybridRnAlarmzSpec {
                     }
                 } else {
                     if let soundName = soundName {
+                        print("📢 [RnAlarmz] Attempting to load sound: \(soundName)")
                         let alertSound = AlertConfiguration.AlertSound.named(soundName)
+                        print("📢 [RnAlarmz] Alert sound created successfully")
                         configuration = AlarmManager.AlarmConfiguration(
                             schedule: schedule,
                             attributes: attributes,
