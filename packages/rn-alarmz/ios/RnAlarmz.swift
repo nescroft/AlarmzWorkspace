@@ -255,19 +255,6 @@ class RnAlarmz: HybridRnAlarmzSpec {
                     if let soundName = soundName {
                         print("📢 [RnAlarmz] Attempting to load sound: \(soundName)")
 
-                        // Check if file exists in bundle
-                        let soundNameWithoutExt = soundName.replacingOccurrences(of: ".caf", with: "").replacingOccurrences(of: ".wav", with: "")
-                        if let soundPath = Bundle.main.path(forResource: soundNameWithoutExt, ofType: nil) {
-                            print("✅ [RnAlarmz] Sound file found in bundle: \(soundPath)")
-                        } else if let soundPathCaf = Bundle.main.path(forResource: soundNameWithoutExt, ofType: "caf") {
-                            print("✅ [RnAlarmz] Sound file found as CAF: \(soundPathCaf)")
-                        } else if let soundPathWav = Bundle.main.path(forResource: soundNameWithoutExt, ofType: "wav") {
-                            print("✅ [RnAlarmz] Sound file found as WAV: \(soundPathWav)")
-                        } else {
-                            print("❌ [RnAlarmz] Sound file NOT found in bundle!")
-                            print("❌ [RnAlarmz] Searched for: \(soundNameWithoutExt)")
-                        }
-
                         // Use the exact soundName as provided (with extension)
                         let alertSound = AlertConfiguration.AlertSound.named(soundName)
                         print("📢 [RnAlarmz] Alert sound created with name: \(soundName)")
@@ -330,6 +317,117 @@ class RnAlarmz: HybridRnAlarmzSpec {
                     print("❌ [RnAlarmz] Full error: \(error)")
 
                     // Create a more detailed error to throw back
+                    let detailedError = NSError(
+                        domain: error.domain,
+                        code: error.code,
+                        userInfo: [
+                            NSLocalizedDescriptionKey: "AlarmKit Error: \(error.domain) Code: \(error.code) - \(error.localizedDescription)",
+                            "originalError": error.userInfo
+                        ]
+                    )
+                    throw detailedError
+                } catch {
+                    print("❌ [RnAlarmz] Unknown error type: \(error)")
+                    throw error
+                }
+            } else {
+                throw NSError(
+                    domain: "AlarmKitError",
+                    code: 1,
+                    userInfo: [NSLocalizedDescriptionKey: "AlarmKit requires iOS 26.0 or later"]
+                )
+            }
+        }
+    }
+
+    @available(iOS 15.1, *)
+    public func scheduleDailyCustomSound(
+        stopBtn: CustomizableAlarmButton,
+        tintColor: String,
+        hour: Double,
+        minute: Double,
+        repeats: [AlarmWeekday],
+        soundName: String
+    ) throws -> NitroModules.Promise<Bool> {
+        NSLog("🔔🔔🔔 [RnAlarmz] scheduleDailyCustomSound CALLED")
+        return NitroModules.Promise.async {
+            NSLog("🔔🔔🔔 [RnAlarmz] Inside async block")
+            if #available(iOS 26.0, *) {
+                NSLog("🔔🔔🔔 [RnAlarmz] iOS 26.0+ check passed")
+                let manager = AlarmManager.shared
+
+                let stopButton = AlarmButton(
+                    text: LocalizedStringResource(stringLiteral: stopBtn.text),
+                    textColor: Color(StringToColor(hex: stopBtn.textColor)),
+                    systemImageName: stopBtn.icon
+                )
+
+                // Simple alert without secondary button
+                let alertPresentationAlert = AlarmPresentation.Alert(
+                    title: LocalizedStringResource(stringLiteral: "What did you dream?"),
+                    stopButton: stopButton
+                )
+
+                let presentation = AlarmPresentation(alert: alertPresentationAlert)
+
+                nonisolated struct EmptyMetadata: AlarmMetadata {}
+
+                let attributes = AlarmAttributes<EmptyMetadata>(
+                    presentation: presentation,
+                    tintColor: Color(StringToColor(hex: tintColor))
+                )
+
+                let time = Alarm.Schedule.Relative.Time(hour: Int(hour), minute: Int(minute))
+
+                let localeWeekdays: [Locale.Weekday] = repeats.map { alarmWeekday in
+                  switch alarmWeekday {
+                  case .monday: return .monday
+                  case .tuesday: return .tuesday
+                  case .wednesday: return .wednesday
+                  case .thursday: return .thursday
+                  case .friday: return .friday
+                  case .saturday: return .saturday
+                  case .sunday: return .sunday
+                  }
+                }
+
+                let schedule = Alarm.Schedule.relative(.init(
+                    time: time,
+                    repeats: localeWeekdays.isEmpty ? .never : .weekly(localeWeekdays)
+                ))
+
+                // Create configuration with custom sound (like scheduleRelativeAlarm)
+                let alertSound = AlertConfiguration.AlertSound.named(soundName)
+                let configuration = AlarmManager.AlarmConfiguration(
+                    schedule: schedule,
+                    attributes: attributes,
+                    sound: alertSound
+                )
+
+                let uuid = UUID()
+                do {
+                    print("🔔 [RnAlarmz] ========== SCHEDULING DAILY CUSTOM SOUND ALARM ==========")
+                    print("🔔 [RnAlarmz] Time: \(hour):\(minute)")
+                    print("🔔 [RnAlarmz] Days count: \(repeats.count)")
+                    print("🔔 [RnAlarmz] Days: \(repeats)")
+                    print("🔔 [RnAlarmz] Locale weekdays: \(localeWeekdays)")
+                    print("🔔 [RnAlarmz] TintColor: \(tintColor)")
+                    print("🔔 [RnAlarmz] Stop button text: \(stopBtn.text)")
+                    print("🔔 [RnAlarmz] Sound name: \(soundName)")
+                    print("🔔 [RnAlarmz] Configuration created, attempting to schedule...")
+
+                    _ = try await manager.schedule(id: uuid, configuration: configuration)
+
+                    print("✅ [RnAlarmz] Alarm scheduled successfully with ID: \(uuid)")
+                    return true
+                } catch let error as NSError {
+                    print("❌ [RnAlarmz] ========== SCHEDULING FAILED ==========")
+                    print("❌ [RnAlarmz] Error domain: \(error.domain)")
+                    print("❌ [RnAlarmz] Error code: \(error.code)")
+                    print("❌ [RnAlarmz] Error description: \(error.localizedDescription)")
+                    print("❌ [RnAlarmz] Error userInfo: \(error.userInfo)")
+                    print("❌ [RnAlarmz] Full error: \(error)")
+
                     let detailedError = NSError(
                         domain: error.domain,
                         code: error.code,

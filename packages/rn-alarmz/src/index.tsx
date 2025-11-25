@@ -70,6 +70,24 @@ export async function scheduleRelativeAlarm(
   );
 }
 
+export async function scheduleDailyCustomSound(
+  stopBtn: CustomizableAlarmButton,
+  tintColor: string,
+  hour: number,
+  minute: number,
+  repeats: AlarmWeekday[],
+  soundName: string
+): Promise<boolean> {
+  return RnAlarmzHybridObject.scheduleDailyCustomSound(
+    stopBtn,
+    tintColor,
+    hour,
+    minute,
+    repeats,
+    soundName
+  );
+}
+
 export async function createAlarmButton(
   text: string,
   textColor: string,

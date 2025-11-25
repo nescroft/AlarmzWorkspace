@@ -105,30 +105,31 @@ afconvert -f caff -d LEI16@44100 -c 1 input.mp3 output.caf
 - If the sound file doesn't meet requirements or can't be found, the alarm will still schedule but may use the default system sound
 - Test your alarm sounds to ensure they trigger properly
 
-### ⚠️ Minute Interval Restriction (Relative/Daily Alarms)
+### ⚠️ Custom Sound Limitation (iOS 26.0.1)
 
-**IMPORTANT:** Based on testing, iOS appears to have an **undocumented restriction** for relative (recurring) alarms:
+**KNOWN ISSUE:** Custom sounds currently have a critical limitation on iOS 26.0.1:
 
-- ✅ **Alarms MAY only trigger on 15-minute intervals**: :00, :15, :30, :45
-- ❌ **Other minutes (like :05, :10, :20) may silently fail to trigger**
-- ⚠️ The alarm will schedule successfully (no errors) but won't actually ring
-- ✅ **Fixed/countdown alarms do NOT have this restriction**
+- ✅ **Custom sounds work with `scheduleFixedAlarm` (one-time/countdown alarms)**
+- ❌ **Custom sounds DO NOT work reliably with `scheduleRelativeAlarm` (daily/recurring alarms)**
+- When using custom sounds with relative alarms:
+  - Alarm only triggers when app is in foreground
+  - No notification/full-screen alarm appears in background
+  - Alarm silently fails when app is closed
+- ✅ **Workaround:** Use `undefined` for the sound parameter on relative alarms (uses default system sound)
 
 **Example:**
 ```typescript
-// These MAY work
-scheduleRelativeAlarm('Alarm', stopBtn, '#FFF', 7, 0, days);   // 7:00 ✅
-scheduleRelativeAlarm('Alarm', stopBtn, '#FFF', 7, 15, days);  // 7:15 ✅
-scheduleRelativeAlarm('Alarm', stopBtn, '#FFF', 7, 30, days);  // 7:30 ✅
-scheduleRelativeAlarm('Alarm', stopBtn, '#FFF', 7, 45, days);  // 7:45 ✅
+// ✅ Works - Fixed alarm with custom sound
+scheduleFixedAlarm('Timer', stopBtn, '#FFF', snoozeBtn, undefined, countdown, 'alarm.caf');
 
-// These may schedule but NOT trigger
-scheduleRelativeAlarm('Alarm', stopBtn, '#FFF', 7, 5, days);   // 7:05 ❌
-scheduleRelativeAlarm('Alarm', stopBtn, '#FFF', 7, 10, days);  // 7:10 ❌
-scheduleRelativeAlarm('Alarm', stopBtn, '#FFF', 7, 25, days);  // 7:25 ❌
+// ❌ Broken - Relative alarm with custom sound (only works in foreground)
+scheduleRelativeAlarm('Daily', stopBtn, '#FFF', 7, 30, days, undefined, undefined, 'alarm.caf');
+
+// ✅ Works - Relative alarm with default sound
+scheduleRelativeAlarm('Daily', stopBtn, '#FFF', 7, 30, days, undefined, undefined, undefined);
 ```
 
-**Recommendation:** For reliable relative/daily alarms, only use minutes: 0, 15, 30, or 45. For other times, use `scheduleFixedAlarm` with countdown or timestamp instead.
+**Status:** This appears to be an iOS 26.0.1 bug or limitation. Testing ongoing to determine root cause.
 
 ## 🔊 Alarm Volume Behavior
 

@@ -23,6 +23,14 @@ export interface RnAlarmz
     countdown?: AlarmCountdown,
     soundName?: string
   ): Promise<boolean>;
+  scheduleDailyCustomSound(
+    stopBtn: CustomizableAlarmButton,
+    tintColor: string,
+    hour: number,
+    minute: number,
+    repeats: AlarmWeekday[],
+    soundName: string
+  ): Promise<boolean>;
   getScheduledAlarms(): Promise<ScheduledAlarm[]>;
   cancelScheduledAlarm(id: string): Promise<boolean>;
 }

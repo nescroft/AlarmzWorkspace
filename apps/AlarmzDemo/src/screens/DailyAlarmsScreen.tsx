@@ -12,7 +12,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import {
-  scheduleRelativeAlarm,
+  scheduleDailyCustomSound,
   createAlarmButton,
   getScheduledAlarms,
   cancelScheduledAlarm,
@@ -36,7 +36,7 @@ export default function DailyAlarmsScreen({ hasPermission }: DailyAlarmsScreenPr
       const alarms = await getScheduledAlarms();
       console.log('📋 Fetched alarms:', alarms);
       // Filter only recurring alarms (daily alarms have weekdays)
-      const dailyAlarms = alarms.filter(alarm => alarm.repeats && alarm.repeats.length > 0);
+      const dailyAlarms = alarms.filter((alarm: { repeats: string | any[]; }) => alarm.repeats && alarm.repeats.length > 0);
       setScheduledAlarms(dailyAlarms);
     } catch (error) {
       console.error('❌ Failed to fetch alarms:', error);
@@ -55,44 +55,10 @@ export default function DailyAlarmsScreen({ hasPermission }: DailyAlarmsScreenPr
     }
   }, [hasPermission]);
 
-  const scheduleDailyAlarm = async (bypassWarning = false) => {
+  const scheduleDailyAlarm = async () => {
     if (!hasPermission) {
       console.warn('⚠️ Permission required to schedule alarm');
       Alert.alert('Permission Required', 'Please grant alarm permission first');
-      return;
-    }
-
-    // Check if alarm is at least 15 minutes in the future
-    const now = new Date();
-    const nextAlarmTime = new Date();
-    nextAlarmTime.setHours(alarmTime.hour, alarmTime.minute, 0, 0);
-
-    // If the alarm time has already passed today, it will ring tomorrow
-    if (nextAlarmTime <= now) {
-      nextAlarmTime.setDate(nextAlarmTime.getDate() + 1);
-    }
-
-    const minutesUntilAlarm = (nextAlarmTime.getTime() - now.getTime()) / (1000 * 60);
-
-    if (minutesUntilAlarm < 15) {
-      Alert.alert(
-        'Too Soon',
-        `Daily alarms must be scheduled at least 15 minutes in the future.\n\nThis alarm is only ${Math.floor(minutesUntilAlarm)} minutes away. One time alarms aka fixed alarms don't have this limitation. You can try a one time alarm on the test page.`,
-        [{ text: 'OK' }]
-      );
-      return;
-    }
-
-    // Check if minute is on a 15-minute boundary (0, 15, 30, 45)
-    if (!bypassWarning && alarmTime.minute % 15 !== 0) {
-      Alert.alert(
-        'Invalid Minute',
-        `⚠️ iOS may only trigger alarms on 15-minute intervals (00, 15, 30, 45).\n\nYou selected :${alarmTime.minute.toString().padStart(2, '0')} which may not trigger.\n\nChange to :00, :15, :30, or :45 to ensure the alarm works.`,
-        [
-          { text: 'Change Minute', style: 'cancel' },
-          { text: 'Schedule Anyway', style: 'destructive', onPress: () => scheduleDailyAlarm(true) },
-        ]
-      );
       return;
     }
 
@@ -105,16 +71,13 @@ export default function DailyAlarmsScreen({ hasPermission }: DailyAlarmsScreenPr
 
       console.log('📦 Buttons created:', { stopButton, snoozeButton });
 
-      const success = await scheduleRelativeAlarm(
-        'Daily Alarm',
+      const success = await scheduleDailyCustomSound(
         stopButton,
         '#00FF00',
         alarmTime.hour,
         alarmTime.minute,
         ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'],
-        undefined,
-        undefined,
-        undefined
+        'soniareCollective.wav'
       );
 
       if (success) {

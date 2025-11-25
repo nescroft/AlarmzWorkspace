@@ -1,0 +1,188 @@
+# Custom Alarm Sound Troubleshooting - November 14, 2025
+
+## Initial Problem
+
+Switched alarm sound from WAV to CAF format. After the switch:
+- Alarms appeared to schedule successfully (no errors)
+- BUT alarms were not triggering at all
+- Previously with WAV: alarms scheduled and triggered, but used default notification sound instead of custom sound
+
+## Investigation Journey
+
+### 1. File Bundle Issue (RESOLVED)
+**Problem:** CAF file wasn't in the app bundle
+**Solution:** Added alarmSound.caf to ios/AlarmzDemo/AlarmzDemo/ directory and verified in Xcode project
+**Status:** ✅ FIXED - File now properly bundled and found by app
+
+### 2. Volume Issue (RESOLVED)
+**Problem:** Alarms barely audible when testing
+**Discovery:** iOS alarm volume is tied to RINGER volume, not media volume
+**Key Facts:**
+- Alarms break through Silent mode and Focus modes ✅
+- BUT volume level follows Settings → Sounds & Haptics → Ringer and Alerts
+- NO programmatic way to force max volume (system limitation)
+- Same behavior as Apple's native Clock app
+**Status:** ✅ DOCUMENTED - Added to README as expected behavior
+
+### 3. The "15-Minute Interval" Red Herring (DEBUNKED)
+**Initial Observation:**
+- At 5:45, scheduled alarms for 6:05, 6:10, 6:15, 6:30
+- Only 6:15 rang
+- Hypothesis: iOS only triggers alarms on 15-minute boundaries (00, 15, 30, 45)
+
+**Further Testing:**
+- 6:30 also on 15-min boundary but DIDN'T ring (breaks theory)
+- User noticed all successful alarms had app open in foreground
+
+**Final Test with undefined sound:**
+- Scheduled 7:15 and 7:20 (only 5 minutes apart)
+- Both rang successfully with app CLOSED
+- CONCLUSION: The 15-minute theory was completely false
+
+**Status:** ❌ DEBUNKED - Removed warnings from code and README
+
+### 4. The Real Problem: Custom Sounds Break Relative Alarms (CRITICAL BUG)
+
+**Discovery:**
+When testing systematically with app closed:
+
+**With undefined sound (default):**
+- ✅ Notification shows with full-screen alarm
+- ✅ Works in background/when app closed
+- ✅ Multiple alarms work (even 5 min apart)
+- ✅ Reliable triggering
+
+**With custom sound (WAV/CAF via AlertConfiguration.AlertSound.named()):**
+- ❌ Only works when app is in FOREGROUND
+- ❌ No notification/full-screen alarm in background
+- ❌ Silently fails when app is closed
+- ❌ Completely broken for background use
+
+**Tested on:** iOS 26.0.1 (real device, not simulator)
+
+### 5. Code Comparison: Fixed vs Relative Alarms
+
+**Compared implementations:**
+- scheduleFixedAlarm (one-time/countdown) - WORKS with custom sound
+- scheduleRelativeAlarm (daily/recurring) - BROKEN with custom sound
+
+**Key Finding:** Both functions use IDENTICAL code for sound handling:
+```swift
+let alertSound = AlertConfiguration.AlertSound.named(soundName)
+configuration = AlarmManager.AlarmConfiguration(
+    countdownDuration: countdownDuration,  // or omitted
+    schedule: schedule,
+    attributes: attributes,
+    sound: alertSound
+)
+```
+
+**The ONLY difference:**
+- Fixed: Uses `Alarm.Schedule.fixed(date)` ✅ Works
+- Relative: Uses `Alarm.Schedule.relative(.init(time:repeats:))` ❌ Broken
+
+## Root Cause
+
+**iOS 26.0.1 BUG:** The combination of:
+- `AlertConfiguration.AlertSound.named()` + `Alarm.Schedule.relative()`
+
+...breaks background alarm presentation for recurring/daily alarms.
+
+This is NOT a code issue - our implementation follows Apple's documented API correctly.
+
+## Solutions Implemented
+
+### Code Changes:
+1. ✅ Removed 15-minute interval validation (false theory)
+2. ✅ Removed 15-minute minimum scheduling time requirement
+3. ✅ Added comprehensive logging for sound file loading
+4. ✅ Bundle verification to confirm sound file presence
+5. ✅ Fixed TypeScript errors in alarm scheduling
+
+### Documentation Added to README:
+1. ✅ Custom Sound Limitation section warning about iOS 26.0.1 bug
+2. ✅ Alarm Volume Behavior section explaining ringer volume limitation
+3. ✅ File bundle location requirements (must be in app bundle)
+4. ✅ Confirmed stereo audio files work (both mono and stereo supported)
+5. ✅ Audio format requirements with proper afconvert examples
+
+### User Experience:
+- Added bottom tab navigation with "Daily" and "Quick Test" tabs
+- Quick Test allows 10-second countdown alarms for rapid testing
+- Daily alarms tab for recurring alarms
+
+## Current Status
+
+**Working:**
+- ✅ Default sound with relative alarms (background)
+- ✅ Custom sound with fixed alarms (background)
+- ✅ Alarm scheduling and cancellation
+- ✅ Multiple alarms
+- ✅ Both mono and stereo audio files
+
+**Broken (iOS 26.0.1):**
+- ❌ Custom sound with relative/daily alarms (foreground only)
+
+**Intermittent Issues:**
+- ⚠️ Alarms may fail to trigger if other notifications fire at same time
+- User reported 7:30 alarm with `undefined` sound didn't ring
+- User has iOS Reminders scheduled every 30 minutes
+- Hypothesis: System Reminder notification at 7:30 may have blocked AlarmKit alarm
+- Earlier tests (7:15, 7:20) worked because no conflicting notifications
+- **This suggests AlarmKit alarms may NOT have guaranteed priority over other notifications on iOS 26.0.1**
+- Recommendation: Schedule alarms offset from other recurring notifications (e.g., if reminders at :00 and :30, schedule alarms at :02 and :32)
+
+**Workaround:**
+Use `undefined` for soundName parameter on scheduleRelativeAlarm until iOS bug is fixed:
+```typescript
+// Current workaround
+scheduleRelativeAlarm('Daily', stopBtn, '#FFF', 7, 30, days, undefined, undefined, undefined);
+```
+
+## Next Steps
+
+1. User updating iOS to newer version to test if bug is fixed
+2. If still broken, may need to file radar/feedback with Apple
+3. Consider alternative: Use system sounds instead of custom sounds
+4. Monitor iOS 26.2+ release notes for AlarmKit fixes
+
+## Key Learnings
+
+1. **Always test on real device** - Simulator behavior differs significantly
+2. **Test with app closed** - Background behavior is different from foreground
+3. **Isolate variables** - Testing with/without custom sound revealed the real issue
+4. **iOS system limitations** - Volume control, no programmatic override
+5. **Beta bugs are real** - iOS 26.0.1 has known AlarmKit presentation issues
+6. **Notification conflicts** - AlarmKit alarms may be blocked by other system notifications (Reminders, etc.) when they fire simultaneously
+7. **Test timing matters** - Schedule test alarms at times with no other notifications to avoid conflicts
+
+## Technical Details
+
+**Audio File Specs (Working):**
+- Format: CAF with Linear PCM (Int16)
+- Sample Rate: 48kHz (44.1kHz also works)
+- Bit Depth: 16-bit
+- Channels: Mono or Stereo (both confirmed working)
+- Duration: Under 30 seconds (hard requirement)
+
+**File Location:**
+- Must be in: ios/AlarmzDemo/AlarmzDemo/
+- Must be added to Xcode project with "Copy items if needed"
+- Must appear in Build Phases → Copy Bundle Resources
+
+**API Used:**
+- Framework: AlarmKit (iOS 26.0+)
+- Sound API: AlertConfiguration.AlertSound.named() from ActivityKit
+- Schedule types: Alarm.Schedule.fixed() and Alarm.Schedule.relative()
+
+## Files Modified
+
+- /packages/rn-alarmz/ios/RnAlarmz.swift (added logging, bundle verification)
+- /packages/rn-alarmz/README.md (documentation updates)
+- /apps/AlarmzDemo/App.tsx (bottom tab navigation)
+- /apps/AlarmzDemo/src/screens/DailyAlarmsScreen.tsx (removed false validations)
+- /apps/AlarmzDemo/src/screens/OneTimeAlarmsScreen.tsx (quick test screen)
+
+## Conclusion
+
+The issue is not with our implementation but an iOS 26.0.1 framework bug where custom sounds break relative alarm background presentation. The code correctly follows Apple's AlarmKit API. Waiting for iOS update to confirm if Apple has fixed this in newer versions.
